@@ -105,7 +105,13 @@ class PaypalCheckout
         }
     }
 
-
+    public function isOrderSuccessful($response)
+    {
+        if ($response->statusCode) {
+            return $response->statusCode == 201;
+        }
+        return null;
+    }
 
     // *********************************************************************************** SETTERS
 
