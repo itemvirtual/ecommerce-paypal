@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
+use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
 use PayPalCheckoutSdk\Orders\OrdersCreateRequest;
 use PayPalHttp\HttpException;
 
@@ -82,6 +83,26 @@ class PaypalCheckout
             }
         }
         return null;
+    }
+
+    public function getOrderId($response)
+    {
+        if ($response->result && $response->result->id) {
+            return $response->result->id;
+        }
+        return null;
+    }
+
+    public function captureOrder($orderId)
+    {
+        $request = new OrdersCaptureRequest($orderId);
+        $request->prefer('return=representation');
+        try {
+            return $this->client->execute($request);
+        } catch (HttpException $e) {
+            Log::channel('ecommerce-paypal')->error($e);
+            return null;
+        }
     }
 
 
