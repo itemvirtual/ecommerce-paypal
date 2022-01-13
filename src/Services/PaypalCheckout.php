@@ -29,7 +29,7 @@ class PaypalCheckout
     private function buildMinimumRequestBody()
     {
         return [
-            "intent" => "AUTHORIZE",
+            "intent" => "CAPTURE",
             "application_context" => [
                 'return_url' => config('ecommerce-paypal.return_url'),
                 'cancel_url' => config('ecommerce-paypal.cancel_url'),
