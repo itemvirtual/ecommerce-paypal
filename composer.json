@@ -46,10 +46,7 @@
         "laravel": {
             "providers": [
                 "Itemvirtual\\EcommercePaypal\\EcommercePaypalServiceProvider"
-            ],
-            "aliases": {
-                "EcommercePaypal": "Itemvirtual\\EcommercePaypal\\EcommercePaypalFacade"
-            }
+            ]
         }
     }
 }

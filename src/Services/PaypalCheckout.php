@@ -13,7 +13,7 @@ use PayPalHttp\HttpException;
 class PaypalCheckout
 {
     private $client;
-    private $total;
+    private $total = 0;
 
     public function __construct()
     {
@@ -46,8 +46,11 @@ class PaypalCheckout
     }
 
     /**
-     * Setting up request body for Authorize. This can be populated with fields as per need. Refer API docs for more details.
+     * Creates an order in PayPal.
+     * Returns the order information with an approval link for the user to make the payment
      *
+     * @return \PayPalHttp\HttpResponse|null
+     * @throws \PayPalHttp\IOException
      */
     public function createOrder()
     {
@@ -66,8 +69,7 @@ class PaypalCheckout
         // "Status: {$response->result->status}";
         // "Order ID: {$response->result->id}";
         // "Intent: {$response->result->intent}";
-        // "Links:";
-        // foreach ($response->result->links as $link) {
+        // "Links: {$response->result->links}";
         //      {$link->rel}
         //      {$link->href}
         //      {$link->method};
@@ -75,24 +77,13 @@ class PaypalCheckout
 
     }
 
-    public function getApprovalLink($response)
-    {
-        foreach ($response->result->links as $link) {
-            if ($link->rel == 'approve') {
-                return $link->href;
-            }
-        }
-        return null;
-    }
-
-    public function getOrderId($response)
-    {
-        if ($response->result && $response->result->id) {
-            return $response->result->id;
-        }
-        return null;
-    }
-
+    /**
+     * Returns the order information after the user has made the payment
+     *
+     * @param $orderId
+     * @return \PayPalHttp\HttpResponse|null
+     * @throws \PayPalHttp\IOException
+     */
     public function captureOrder($orderId)
     {
         $request = new OrdersCaptureRequest($orderId);
@@ -105,6 +96,42 @@ class PaypalCheckout
         }
     }
 
+    /**
+     * Helper function to retrieve the approval link
+     *
+     * @param $response
+     * @return mixed|null
+     */
+    public function getApprovalLink($response)
+    {
+        foreach ($response->result->links as $link) {
+            if ($link->rel == 'approve') {
+                return $link->href;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper function to retrieve the order id
+     *
+     * @param $response
+     * @return mixed|null
+     */
+    public function getOrderId($response)
+    {
+        if ($response->result && $response->result->id) {
+            return $response->result->id;
+        }
+        return null;
+    }
+
+    /**
+     * Helper function to validate order status
+     *
+     * @param $response
+     * @return bool|null
+     */
     public function isOrderSuccessful($response)
     {
         if ($response->statusCode) {
@@ -118,9 +145,13 @@ class PaypalCheckout
 
     /**
      * @return mixed
+     * @throws \Exception
      */
     public function getTotal()
     {
+        if ($this->total <= 0) {
+            throw new \Exception('Incorrect amount for PayPal transaction');
+        }
         return $this->total;
     }
 

@@ -4,7 +4,6 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/itemvirtual/ecommerce-paypal.svg?style=flat-square)](https://packagist.org/packages/itemvirtual/ecommerce-paypal)
 [![Total Downloads](https://img.shields.io/packagist/dt/itemvirtual/ecommerce-paypal.svg?style=flat-square)](https://packagist.org/packages/itemvirtual/ecommerce-paypal)
 
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
 
 ## Installation
 
@@ -17,17 +16,42 @@ Publish config (with `--force` option to update)
 ``` bash
 php artisan vendor:publish --provider="Itemvirtual\EcommercePaypal\EcommercePaypalServiceProvider" --tag=config
 ```
+Add this environment variable to your `.env`
+``` bash
+ECOMMERCE_PAYPAL_MODE=sandbox  # sandbox or live
+ECOMMERCE_PAYPAL_CLIENT_ID=""
+ECOMMERCE_PAYPAL_CLIENT_SECRET=""
+ECOMMERCE_PAYPAL_RETURN_URL="${APP_URL}/<paypal-ok-url>"
+ECOMMERCE_PAYPAL_CANCEL_URL="${APP_URL}/<paypal-cancel-url>"
+```
 
 ## Usage
 
+Create a PayPal order  
+After creating the order, get the approval link for the user to make the payment
 ```php
-// Usage description here
+use Itemvirtual\EcommercePaypal\Services\PaypalCheckout;
+
+$EcommercePaypal = new PaypalCheckout();
+$EcommercePaypalApprovalLink = null;
+        
+$EcommercePaypalOrder = $EcommercePaypal->setTotal(<TotalAmountToPay>)->createOrder();
+
+if ($EcommercePaypalOrder) {
+    $EcommercePaypalApprovalLink = $EcommercePaypal->getApprovalLink($EcommercePaypalOrder);
+    $EcommercePaypalOrderId = $EcommercePaypal->getOrderId($EcommercePaypalOrder);
+}
 ```
 
-### Testing
+After the user has made the payment in PayPal, capture order and get payment details
+```php
+use Itemvirtual\EcommercePaypal\Services\PaypalCheckout;
 
-```bash
-composer test
+$paypalOrderId = $request->get('token', null);
+
+$EcommercePaypal = new PaypalCheckout();
+$EcommercePaypalResponse = $EcommercePaypal->captureOrder($paypalOrderId);
+$isOrderSuccessful = $EcommercePaypal->isOrderSuccessful($EcommercePaypalResponse);
 ```
 
 ### Changelog
@@ -37,10 +61,6 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 ## Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-### Security
-
-If you discover any security related issues, please email projectes@itemvirtual.com instead of using the issue tracker.
 
 ## Credits
 
